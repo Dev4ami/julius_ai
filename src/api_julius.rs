@@ -1,9 +1,11 @@
 use reqwest::header::{HeaderMap, HeaderValue};
-//use std::collections::HashMap;
 use serde_json::{Value, json};
 use dotenv::dotenv;
-use sqlx::PgPool;
+use sqlx::mysql::MySqlPool;
+
 use std::env;
+use uuid::Uuid;
+use crate::api_julius;
 
 const URL_AI_DEMO: &str= "https://playground.julius.ai";
 
@@ -118,7 +120,7 @@ pub async fn generate_conversation_id(demo_id: &str) -> (bool, String, String) {
     
     let data = json!({
         "provider": "default",
-        "server_type": "CPU",
+        "server_type": "RAM",
         "template_id": null,
         "chat_type": null,
         "tool_preferences": null,
@@ -144,55 +146,75 @@ pub async fn generate_conversation_id(demo_id: &str) -> (bool, String, String) {
 
 
 pub async fn asking_ai(prompt: String) -> String {
-    dotenv().ok();
+    'check: loop {
+        dotenv().ok();
 
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set in the .env file");
-    let pool = PgPool::connect(&database_url).await
-        .expect("Failed to create pool.");
-    let latest_record = sqlx::query!("SELECT demo_id, conversation_id FROM user_data ORDER BY created_at DESC LIMIT 1")
-    .fetch_one(&pool).await.expect("Failed to fetch latest record");
-    let demo_id = latest_record.demo_id;
-    let conversation_id = latest_record.conversation_id;
+        let database_url = env::var("DATABASE_URL")
+            .expect("DATABASE_URL must be set in the .env file");
+        let pool = MySqlPool::connect(&database_url).await
+            .expect("Failed to create pool.");
+        let latest_record = sqlx::query!("SELECT demo_id, conversation_id FROM user_data ORDER BY created_at DESC LIMIT 1")
+            .fetch_one(&pool).await.expect("Failed to fetch latest record");
+        let demo_id = latest_record.demo_id;
+        let conversation_id = latest_record.conversation_id;
 
+        let url_api = URL_AI_DEMO.to_string();
+        let url = format!("{}/api/chat/message", url_api);
+        let headers = header_asking_ai(&demo_id, &conversation_id);
+        let prompt = format!("#gunakan bahasa indonesia \n#kamu irfan ai {}", prompt);
+        let data = json!({
+            "message": {
+                "content": prompt,
+                "role": "user"
+            },
+            "provider": "default",
+            "chat_mode": "auto",
+            "client_version": "20240130",
+            "theme": "light",
+            "new_images": null,
+            "new_attachments": null,
+            "dataframe_format": "json",
+            "selectedModels": ["GPT-4o"]
+        });
 
-
-    let url_api = URL_AI_DEMO.to_string();
-    let url = format!("{}/api/chat/message", url_api);
-    let headers = header_asking_ai(&demo_id, &conversation_id);
-    let prompt = format!("#gunakan bahasa indonesia \n #kamu irfan ai {}", prompt);
-    let data = json!({
-        "message": {
-            "content": prompt
-        },
-        "provider": "default",
-        "chat_mode": "auto",
-        "client_version": "20240130",
-        "theme": "light",
-        "new_images": null,
-        "new_attachments": null,
-        "dataframe_format": "json",
-        "selectedModels": "Llama 3.2"
-    });
-    
-    let client = reqwest::Client::new();
-    let response = client.post(url).headers(headers).json(&data).send().await.unwrap();
-    let mut content = String::new();
-    if response.status().is_success() {
-        let body = response.text().await.unwrap();
-        for line in body.lines() {
-            let v: Value = serde_json::from_str(line).unwrap();
-            if let Some(line_content) = v.get("content") {
-                if let Some(content_str) = line_content.as_str() {
-                    content.push_str(content_str);
+        let client = reqwest::Client::new();
+        let response = client.post(url).headers(headers).json(&data).send().await.unwrap();
+        let mut content = String::new();
+        if response.status().is_success() {
+            let body = response.text().await.unwrap();
+            let second_line = body.lines().nth(1).unwrap_or("No second line available");
+            let json: Value = serde_json::from_str(&second_line).unwrap();
+            let num_messages = json["num_messages"].as_str().unwrap();
+            let messages_allowed = json["messages_allowed"].as_str().unwrap();
+            content.push_str(format!("{}/{}\n\n\n", num_messages, messages_allowed).as_str());
+            for line in body.lines() {
+                let v: Value = serde_json::from_str(line).unwrap();
+                if let Some(line_content) = v.get("content") {
+                    if let Some(content_str) = line_content.as_str() {
+                        content.push_str(content_str);
+                    }
                 }
             }
+            return content.to_string();
+        } else if response.status().is_client_error() {
+            let demo_id = api_julius::generate_demo_id().await;
+            if demo_id.0 == true {
+                let conversation_id = Uuid::new_v4().to_string();
+                let query = sqlx::query("INSERT INTO user_data (demo_id, conversation_id) VALUES (?, ?)")
+                    .bind(&demo_id.1)
+                    .bind(&conversation_id);
+                query.execute(&pool).await.expect("Failed to execute query.");
+                continue 'check;
+            } else {
+                println!("gagal mendapatkan demo_id");
+            }
+        } else {
+            let body = response.text().await.unwrap();
+            return body.to_string();  // Mengembalikan hasil jika gagal
         }
-        content.to_string()
-    } else {
-        let body = response.text().await.unwrap();
-        body.to_string()
+
+        // Jika query berhasil, loop akan berhenti di sini
+        break Default::default()
     }
 }
-
 
