@@ -2,7 +2,6 @@ use crate::api_julius;
 
 use teloxide::{prelude::*};
 use dotenv::dotenv;
-//use sqlx::PgPool;
 use sqlx::mysql::MySqlPool;
 use std::env;
 

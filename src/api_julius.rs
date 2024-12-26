@@ -210,10 +210,9 @@ pub async fn asking_ai(prompt: String) -> String {
             }
         } else {
             let body = response.text().await.unwrap();
-            return body.to_string();  // Mengembalikan hasil jika gagal
+            return body.to_string();
         }
 
-        // Jika query berhasil, loop akan berhenti di sini
         break Default::default()
     }
 }
