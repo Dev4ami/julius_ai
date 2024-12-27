@@ -131,14 +131,11 @@ pub async fn generate_conversation_id(demo_id: &str) -> (bool, String, String) {
 
     if response.status().is_success() {
         let body = response.text().await.unwrap();
-//        println!("{}", &body);
         let json: Value = serde_json::from_str(&body).unwrap();
         let demo_id = json["id"].as_str().unwrap().to_string();
         let conversation_id= json["user_id"].as_str().unwrap().to_string();
         (true, demo_id, conversation_id)
     } else {
-//        let body = response.text().await.unwrap();
-//        println!("{}", &body);
         (false,"".to_string(), "".to_string())
     }
 }

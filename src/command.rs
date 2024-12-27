@@ -22,10 +22,11 @@ async fn help_data() -> String {
     format!("
 This Bot For Private Ai (Test Mode)
 
-/start  ==> Start Bot 
+/start  ==> Start Bot
 /help  ==> Bantuan
 /new  ==> Renew Chat
 /draw  ==> Generate Image
+
 ")}
 
 

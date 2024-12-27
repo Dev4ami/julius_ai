@@ -45,10 +45,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
 }
 
 async fn handle_non_command_message(bot: Bot, msg: Message) -> ResponseResult<()> {
-    let response = api_julius::asking_ai(msg.text().unwrap().to_string()).await;
-    bot.send_message(msg.chat.id, response).await?;
+    let response = api_julius::asking_ai(msg.text().unwrap_or("saya mengirimkan prompt tidak valid, dan kamu meminta maaf karena tidak dapat memproses prompt tersebut").to_string()).await;
+    bot.send_message(msg.chat.id,format!(r#"{}"#, response))
+        .parse_mode(teloxide::types::ParseMode::Markdown)
+        .await?;
     Ok(())
 }
-
-
-
