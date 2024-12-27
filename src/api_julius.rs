@@ -5,14 +5,13 @@ use sqlx::mysql::MySqlPool;
 
 use std::env;
 use uuid::Uuid;
-use crate::api_julius;
 
 const URL_AI_DEMO: &str= "https://playground.julius.ai";
 
 
 fn header_generate_temp() -> HeaderMap {
     let mut headers = HeaderMap::new();
-    headers.insert("Host", HeaderValue::from_static("playground.julius.ai"));
+    headers.insert("Host", HeaderValue::from_str(URL_AI_DEMO).unwrap());
     headers.insert("sec-ch-ua", HeaderValue::from_static("\"Google Chrome\";v=\"119\", \"Chromium\";v=\"119\", \"Not?A_Brand\";v=\"24\""));
     headers.insert("use-dict", HeaderValue::from_static("false"));
     headers.insert("sec-ch-ua-mobile", HeaderValue::from_static("?1"));
@@ -36,7 +35,7 @@ fn header_generate_temp() -> HeaderMap {
 
 fn header_generate_conversation_id(demo_id: &str) -> HeaderMap {
     let mut headers = HeaderMap::new();
-    headers.insert("Host", HeaderValue::from_static("playground.julius.ai"));
+    headers.insert("Host", HeaderValue::from_str(URL_AI_DEMO).unwrap());
     headers.insert("sec-ch-ua", HeaderValue::from_static("\"Google Chrome\";v=\"119\", \"Chromium\";v=\"119\", \"Not?A_Brand\";v=\"24\""));
     headers.insert("use-dict", HeaderValue::from_static("false"));
     headers.insert("sec-ch-ua-mobile", HeaderValue::from_static("?1"));
@@ -65,7 +64,7 @@ fn header_generate_conversation_id(demo_id: &str) -> HeaderMap {
 
 fn header_asking_ai(demo_id: &str, conversation_id: &str) -> HeaderMap {
     let mut headers = HeaderMap::new();
-    headers.insert("Host", HeaderValue::from_static("playground.julius.ai"));
+    headers.insert("Host", HeaderValue::from_str(URL_AI_DEMO).unwrap());
     headers.insert("sec-ch-ua", HeaderValue::from_static("\"Google Chrome\";v=\"119\", \"Chromium\";v=\"119\", \"Not?A_Brand\";v=\"24\""));
     headers.insert("use-dict", HeaderValue::from_static("false"));
     headers.insert("sec-ch-ua-mobile", HeaderValue::from_static("?1"));
@@ -194,7 +193,7 @@ pub async fn asking_ai(prompt: String) -> String {
             }
             return content.to_string();
         } else if response.status().is_client_error() {
-            let demo_id = api_julius::generate_demo_id().await;
+            let demo_id = generate_demo_id().await;
             if demo_id.0 == true {
                 let conversation_id = Uuid::new_v4().to_string();
                 let query = sqlx::query("INSERT INTO user_data (demo_id, conversation_id) VALUES (?, ?)")
