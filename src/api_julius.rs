@@ -11,7 +11,7 @@ const URL_AI_DEMO: &str= "https://playground.julius.ai";
 
 fn header_generate_temp() -> HeaderMap {
     let mut headers = HeaderMap::new();
-    headers.insert("Host", HeaderValue::from_str(URL_AI_DEMO).unwrap());
+    headers.insert("Host", HeaderValue::from_static("playground.julius.ai"));
     headers.insert("sec-ch-ua", HeaderValue::from_static("\"Google Chrome\";v=\"119\", \"Chromium\";v=\"119\", \"Not?A_Brand\";v=\"24\""));
     headers.insert("use-dict", HeaderValue::from_static("false"));
     headers.insert("sec-ch-ua-mobile", HeaderValue::from_static("?1"));
@@ -35,7 +35,7 @@ fn header_generate_temp() -> HeaderMap {
 
 fn header_generate_conversation_id(demo_id: &str) -> HeaderMap {
     let mut headers = HeaderMap::new();
-    headers.insert("Host", HeaderValue::from_str(URL_AI_DEMO).unwrap());
+    headers.insert("Host", HeaderValue::from_static("playground.julius.ai"));
     headers.insert("sec-ch-ua", HeaderValue::from_static("\"Google Chrome\";v=\"119\", \"Chromium\";v=\"119\", \"Not?A_Brand\";v=\"24\""));
     headers.insert("use-dict", HeaderValue::from_static("false"));
     headers.insert("sec-ch-ua-mobile", HeaderValue::from_static("?1"));
@@ -64,7 +64,7 @@ fn header_generate_conversation_id(demo_id: &str) -> HeaderMap {
 
 fn header_asking_ai(demo_id: &str, conversation_id: &str) -> HeaderMap {
     let mut headers = HeaderMap::new();
-    headers.insert("Host", HeaderValue::from_str(URL_AI_DEMO).unwrap());
+    headers.insert("Host", HeaderValue::from_static("playground.julius.ai"));
     headers.insert("sec-ch-ua", HeaderValue::from_static("\"Google Chrome\";v=\"119\", \"Chromium\";v=\"119\", \"Not?A_Brand\";v=\"24\""));
     headers.insert("use-dict", HeaderValue::from_static("false"));
     headers.insert("sec-ch-ua-mobile", HeaderValue::from_static("?1"));

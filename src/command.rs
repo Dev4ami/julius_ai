@@ -5,6 +5,7 @@ use dotenv::dotenv;
 use sqlx::mysql::MySqlPool;
 use std::env;
 
+
 pub async fn start(bot: Bot, msg: Message) -> ResponseResult<()> {
     bot.send_message(msg.chat.id, "Server Onlline").await?;
     Ok(())
@@ -55,5 +56,7 @@ pub async fn new(bot: Bot, msg: Message) -> ResponseResult<()> {
     }
     Ok(())
 }
+
+
 
 
